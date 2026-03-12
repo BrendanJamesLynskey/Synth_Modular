@@ -154,6 +154,13 @@ body::after {
   grid-column: span 2;
 }
 
+/* Ensure 3-column grid fills evenly on desktop */
+@media (min-width: 769px) {
+  .synth-panel {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 .module-title {
   font-family: 'Orbitron', sans-serif;
   font-weight: 500;
