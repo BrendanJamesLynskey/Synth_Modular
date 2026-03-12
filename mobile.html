@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>SYNTH MODULAR — Mobile</title>
+  <meta name="theme-color" content="#0a0a0f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap');
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0f;
+      --panel: #111118;
+      --panel-border: #1a1a25;
+      --module-bg: #0e0e16;
+      --accent: #ff6b2b;
+      --accent2: #00e5ff;
+      --accent3: #b388ff;
+      --text: #d4d0c8;
+      --dim: #555;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      height: 100dvh;
+      overflow: hidden;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    /* Scanlines */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px);
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    /* Header */
+    .m-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.4rem 0.6rem;
+      background: linear-gradient(180deg, #151520, var(--panel));
+      border-bottom: 1px solid var(--panel-border);
+      flex-shrink: 0;
+    }
+
+    .m-logo {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+    }
+
+    .m-header select {
+      background: var(--module-bg);
+      color: var(--text);
+      border: 1px solid var(--panel-border);
+      padding: 0.25rem 0.3rem;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem;
+      border-radius: 2px;
+      max-width: 120px;
+    }
+
+    /* Tab Navigation */
+    .tab-bar {
+      display: flex;
+      background: var(--panel);
+      border-bottom: 1px solid var(--panel-border);
+      flex-shrink: 0;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 0.4rem 0.3rem;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--dim);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.55rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* Tab Content */
+    .tab-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .tab-page {
+      display: none;
+      padding: 0.5rem;
+    }
+
+    .tab-page.active {
+      display: block;
+    }
+
+    /* Visualizer */
+    .m-viz {
+      height: 80px;
+      background: var(--module-bg);
+      border-bottom: 1px solid var(--panel-border);
+      flex-shrink: 0;
+    }
+    .m-viz canvas { width: 100%; height: 100%; }
+
+    /* Mobile Controls */
+    .m-module {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 4px;
+      padding: 0.6rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .m-module-title {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 500;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .m-led {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 4px var(--accent);
+    }
+    .m-led.cyan { background: var(--accent2); box-shadow: 0 0 4px var(--accent2); }
+    .m-led.purple { background: var(--accent3); box-shadow: 0 0 4px var(--accent3); }
+
+    .m-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.35rem;
+      align-items: center;
+    }
+
+    .m-ctrl {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .m-ctrl label {
+      font-size: 0.5rem;
+      color: var(--dim);
+      letter-spacing: 0.1em;
+    }
+
+    .m-ctrl select {
+      background: var(--module-bg);
+      color: var(--text);
+      border: 1px solid var(--panel-border);
+      padding: 0.3rem;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem;
+      border-radius: 2px;
+      width: 100%;
+    }
+
+    .m-range {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      background: #222;
+      border-radius: 4px;
+      outline: none;
+    }
+
+    .m-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #666, #333);
+      border: 2px solid var(--accent);
+      box-shadow: 0 0 6px rgba(255,107,43,0.3);
+    }
+
+    .m-val {
+      font-size: 0.55rem;
+      color: var(--accent2);
+      text-align: right;
+    }
+
+    /* Mobile Keyboard */
+    .m-keyboard-wrap {
+      flex-shrink: 0;
+      padding: 0.3rem;
+      background: linear-gradient(180deg, var(--panel), #0d0d14);
+      border-top: 1px solid var(--panel-border);
+      overflow-x: auto;
+    }
+
+    .m-keyboard {
+      display: flex;
+      position: relative;
+      height: 90px;
+      min-width: 450px;
+    }
+
+    .m-key {
+      position: relative;
+      cursor: pointer;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .m-key.white {
+      flex: 1;
+      background: linear-gradient(180deg, #e8e4dc, #d4d0c8);
+      border: 1px solid #999;
+      border-radius: 0 0 4px 4px;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .m-key.white.active {
+      background: linear-gradient(180deg, #bbb7af, #aaa6a0);
+    }
+
+    .m-key.black {
+      width: 24px;
+      height: 60%;
+      background: linear-gradient(180deg, #222, #111);
+      border: 1px solid #000;
+      border-radius: 0 0 3px 3px;
+      z-index: 2;
+      margin-left: -12px;
+      margin-right: -12px;
+    }
+
+    .m-key.black.active {
+      background: linear-gradient(180deg, #333, #222);
+    }
+
+    /* Sequencer Mobile */
+    .m-seq-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    .m-seq-step {
+      aspect-ratio: 1;
+      background: var(--module-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 3px;
+      cursor: pointer;
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.45rem;
+      color: var(--dim);
+    }
+
+    .m-seq-step.active {
+      background: rgba(255,107,43,0.3);
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .m-seq-step.current {
+      box-shadow: 0 0 8px rgba(0,229,255,0.5);
+      border-color: var(--accent2);
+    }
+
+    .m-seq-controls {
+      display: flex;
+      gap: 0.4rem;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .m-seq-btn {
+      background: var(--module-bg);
+      color: var(--text);
+      border: 1px solid var(--panel-border);
+      padding: 0.4rem 0.8rem;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .m-seq-btn.active {
+      background: rgba(255,107,43,0.2);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .m-bpm-input {
+      background: var(--module-bg);
+      color: var(--accent2);
+      border: 1px solid var(--panel-border);
+      padding: 0.4rem;
+      width: 55px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.75rem;
+      border-radius: 3px;
+      text-align: center;
+    }
+
+    .m-seq-row-label {
+      font-size: 0.5rem;
+      color: var(--dim);
+      margin-bottom: 0.2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="m-header">
+      <a href="index.html" class="m-logo">&larr; SYNTH</a>
+      <select id="presetSelect"></select>
+    </header>
+
+    <!-- Viz -->
+    <div class="m-viz">
+      <canvas id="vizCanvas"></canvas>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="osc">OSC</button>
+      <button class="tab-btn" data-tab="filter">FILTER</button>
+      <button class="tab-btn" data-tab="env">ENV</button>
+      <button class="tab-btn" data-tab="lfo">LFO</button>
+      <button class="tab-btn" data-tab="fx">FX</button>
+      <button class="tab-btn" data-tab="seq">SEQ</button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- OSC Tab -->
+      <div class="tab-page active" id="tab-osc">
+        <div class="m-module">
+          <div class="m-module-title"><div class="m-led"></div> OSCILLATOR 1</div>
+          <div class="m-row">
+            <div class="m-ctrl">
+              <label>WAVE</label>
+              <select data-param="oscType">
+                <option value="sawtooth">SAW</option>
+                <option value="square">SQUARE</option>
+                <option value="sine">SINE</option>
+                <option value="triangle">TRI</option>
+              </select>
+            </div>
+            <div class="m-ctrl">
+              <label>OCTAVE</label>
+              <select data-param="octave">
+                <option value="-2">-2</option>
+                <option value="-1">-1</option>
+                <option value="0" selected>0</option>
+                <option value="1">+1</option>
+                <option value="2">+2</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="m-module">
+          <div class="m-module-title"><div class="m-led cyan"></div> OSCILLATOR 2</div>
+          <div class="m-row">
+            <div class="m-ctrl">
+              <label>WAVE</label>
+              <select data-param="osc2Type">
+                <option value="sawtooth">SAW</option>
+                <option value="square" selected>SQUARE</option>
+                <option value="sine">SINE</option>
+                <option value="triangle">TRI</option>
+              </select>
+            </div>
+            <div class="m-ctrl">
+              <label>OCTAVE</label>
+              <select data-param="osc2Octave">
+                <option value="-2">-2</option>
+                <option value="-1">-1</option>
+                <option value="0" selected>0</option>
+                <option value="1">+1</option>
+                <option value="2">+2</option>
+              </select>
+            </div>
+          </div>
+          <div class="m-row">
+            <div class="m-ctrl">
+              <label>DETUNE</label>
+              <input type="range" data-param="osc2Detune" min="0" max="50" step="1" value="7" class="m-range">
+            </div>
+            <div class="m-ctrl">
+              <label>MIX</label>
+              <input type="range" data-param="osc2Mix" min="0" max="1" step="0.01" value="0.5" class="m-range">
+            </div>
+          </div>
+          <div class="m-row">
+            <div class="m-ctrl">
+              <label>NOISE</label>
+              <input type="range" data-param="noiseLevel" min="0" max="1" step="0.01" value="0" class="m-range">
+            </div>
+            <div class="m-ctrl">
+              <label>MASTER VOL</label>
+              <input type="range" data-param="masterVolume" min="0" max="1" step="0.01" value="0.7" class="m-range">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILTER Tab -->
+      <div class="tab-page" id="tab-filter">
+        <div class="m-module">
+          <div class="m-module-title"><div class="m-led"></div> FILTER</div>
+          <div class="m-row">
+            <div class="m-ctrl">
+              <label>TYPE</label>
+              <select data-param="filterType">
+                <option value="lowpass">LPF</option>
+                <option value="highpass">HPF</option>
+                <option value="bandpass">BPF</option>
+                <option value="notch">NOTCH</option>
+              </select>
+            </div>
+          </div>
+          <div class="m-row">
+            <div class="m-ctrl">
+              <label>CUTOFF</label>
+              <input type="range" data-param="filterCutoff" min="20" max="20000" step="1" value="5000" class="m-range">
+              <div class="m-val" data-for="filterCutoff">5000 Hz</div>
+            </div>
+          </div>
+          <div class="m-row">
+            <div class="m-ctrl">
+              <label>RESONANCE</label>
+              <input type="range" data-param="filterResonance" min="0" max="20" step="0.1" value="1" class="m-range">
+              <div class="m-val" data-for="filterResonance">1.0</div>
+            </div>
+          </div>
+          <div class="m-row">
+            <div class="m-ctrl">
+              <label>ENV AMOUNT</label>
+              <input type="range" data-param="filterEnvAmount" min="0" max="1" step="0.01" value="0" class="m-range">
+              <div class="m-val" data-for="filterEnvAmount">0.00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ENV Tab -->
+      <div class="tab-page" id="tab-env">
+        <div class="m-module">
+          <div class="m-module-title"><div class="m-led purple"></div> ENVELOPE</div>
+          <div class="m-row">
+            <div class="m-ctrl">
+              <label>ATTACK</label>
+              <input type="range" data-param="attack" min="0.001" max="5" step="0.001" value="0.01" class="m-range">
+              <div class="m-val" data-for="attack">0.01</div>
+            </div>
+            <div class="m-ctrl">
+              <label>DECAY</label>
+              <input type="range" data-param="decay" min="0.001" max="5" step="0.001" value="0.3" class="m-range">
+              <div class="m-val" data-for="decay">0.30</div>
+            </div>
+          </div>
+          <div class="m-row">
+            <div class="m-ctrl">
+              <label>SUSTAIN</label>
+              <input type="range" data-param="sustain" min="0" max="1" step="0.01" value="0.7" class="m-range">
+              <div class="m-val" data-for="sustain">0.70</div>
+            </div>
+            <div class="m-ctrl">
+              <label>RELEASE</label>
+              <input type="range" data-param="release" min="0.01" max="10" step="0.01" value="0.5" class="m-range">
+              <div class="m-val" data-for="release">0.50</div>
+            </div>
+          </div>
+          <canvas id="envCanvas" width="300" height="80" style="width:100%; height:60px; background:var(--module-bg); border:1px solid var(--panel-border); border-radius:3px; margin-top:0.3rem;"></canvas>
+        </div>
+      </div>
+
+      <!-- LFO Tab -->
+      <div class="tab-page" id="tab-lfo">
+        <div class="m-module">
+          <div class="m-module-title"><div class="m-led cyan"></div> LFO</div>
+          <div class="m-row">
+            <div class="m-ctrl">
+              <label>SHAPE</label>
+              <select data-param="lfoShape">
+                <option value="sine">SINE</option>
+                <option value="square">SQUARE</option>
+                <option value="sawtooth">SAW</option>
+                <option value="triangle">TRI</option>
+              </select>
+            </div>
+            <div class="m-ctrl">
+              <label>TARGET</label>
+              <select data-param="lfoTarget">
+                <option value="filter">FILTER</option>
+                <option value="pitch">PITCH</option>
+                <option value="amplitude">AMP</option>
+              </select>
+            </div>
+          </div>
+          <div class="m-row">
+            <div class="m-ctrl">
+              <label>RATE</label>
+              <input type="range" data-param="lfoRate" min="0.01" max="30" step="0.01" value="4" class="m-range">
+              <div class="m-val" data-for="lfoRate">4.00</div>
+            </div>
+          </div>
+          <div class="m-row">
+            <div class="m-ctrl">
+              <label>DEPTH</label>
+              <input type="range" data-param="lfoDepth" min="0" max="1" step="0.01" value="0" class="m-range">
+              <div class="m-val" data-for="lfoDepth">0.00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FX Tab -->
+      <div class="tab-page" id="tab-fx">
+        <div class="m-module">
+          <div class="m-module-title"><div class="m-led"></div> DELAY</div>
+          <div class="m-row">
+            <div class="m-ctrl">
+              <label>TIME</label>
+              <input type="range" data-param="delayTime" min="0.01" max="1.5" step="0.01" value="0.3" class="m-range">
+            </div>
+            <div class="m-ctrl">
+              <label>FDBK</label>
+              <input type="range" data-param="delayFeedback" min="0" max="0.9" step="0.01" value="0.3" class="m-range">
+            </div>
+            <div class="m-ctrl">
+              <label>MIX</label>
+              <input type="range" data-param="delayMix" min="0" max="1" step="0.01" value="0.2" class="m-range">
+            </div>
+          </div>
+        </div>
+        <div class="m-module">
+          <div class="m-module-title"><div class="m-led"></div> REVERB</div>
+          <div class="m-row">
+            <div class="m-ctrl">
+              <label>DECAY</label>
+              <input type="range" data-param="reverbDecay" min="0.1" max="8" step="0.1" value="2.5" class="m-range">
+            </div>
+            <div class="m-ctrl">
+              <label>MIX</label>
+              <input type="range" data-param="reverbMix" min="0" max="1" step="0.01" value="0.2" class="m-range">
+            </div>
+          </div>
+        </div>
+        <div class="m-module">
+          <div class="m-module-title"><div class="m-led"></div> DISTORTION</div>
+          <div class="m-row">
+            <div class="m-ctrl">
+              <label>DRIVE</label>
+              <input type="range" data-param="distortionAmount" min="0" max="1" step="0.01" value="0" class="m-range">
+            </div>
+          </div>
+        </div>
+        <div class="m-module">
+          <div class="m-module-title"><div class="m-led"></div> CHORUS</div>
+          <div class="m-row">
+            <div class="m-ctrl">
+              <label>RATE</label>
+              <input type="range" data-param="chorusRate" min="0.1" max="10" step="0.1" value="1.5" class="m-range">
+            </div>
+            <div class="m-ctrl">
+              <label>DEPTH</label>
+              <input type="range" data-param="chorusDepth" min="0" max="0.01" step="0.0001" value="0.002" class="m-range">
+            </div>
+            <div class="m-ctrl">
+              <label>MIX</label>
+              <input type="range" data-param="chorusMix" min="0" max="1" step="0.01" value="0" class="m-range">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEQ Tab -->
+      <div class="tab-page" id="tab-seq">
+        <div class="m-module">
+          <div class="m-module-title"><div class="m-led"></div> SEQUENCER</div>
+          <div class="m-seq-controls">
+            <button id="mSeqPlayBtn" class="m-seq-btn">&#9654; PLAY</button>
+            <button id="mSeqStopBtn" class="m-seq-btn">&#9632; STOP</button>
+            <input type="number" id="mSeqBPM" value="120" min="30" max="300" class="m-bpm-input">
+            <span style="font-size:0.5rem; color:var(--dim);">BPM</span>
+          </div>
+          <div class="m-seq-controls">
+            <select id="mSeqPreset" style="background:var(--module-bg); color:var(--text); border:1px solid var(--panel-border); padding:0.3rem; font-family:'Share Tech Mono'; font-size:0.7rem; border-radius:3px;"></select>
+            <button id="mSeqRandom" class="m-seq-btn" style="font-size:0.6rem;">RANDOM</button>
+            <select id="mSeqScale" style="background:var(--module-bg); color:var(--text); border:1px solid var(--panel-border); padding:0.3rem; font-family:'Share Tech Mono'; font-size:0.65rem; border-radius:3px;">
+              <option value="minor">Minor</option>
+              <option value="major">Major</option>
+              <option value="pentatonic">Pent</option>
+              <option value="blues">Blues</option>
+              <option value="dorian">Dorian</option>
+              <option value="arabic">Arabic</option>
+            </select>
+          </div>
+          <div class="m-seq-row-label">STEPS 1-8</div>
+          <div class="m-seq-grid" id="mSeqGrid1"></div>
+          <div class="m-seq-row-label">STEPS 9-16</div>
+          <div class="m-seq-grid" id="mSeqGrid2"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Keyboard -->
+    <div class="m-keyboard-wrap">
+      <div class="m-keyboard" id="mKeyboard"></div>
+    </div>
+  </div>
+
+  <script src="synth-engine.js"></script>
+  <script src="presets.js"></script>
+  <script>
+    // ============================================================
+    // MOBILE APP CONTROLLER
+    // ============================================================
+    const synth = new SynthEngine();
+    const seq = new Sequencer(synth);
+
+    // --- Tabs ---
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // --- Init ---
+    async function initApp() {
+      await synth.init();
+      buildKeyboard();
+      buildSequencer();
+      populatePresets();
+      bindControls();
+      startViz();
+      drawEnvelope();
+    }
+
+    // --- Presets ---
+    function populatePresets() {
+      const sel = document.getElementById('presetSelect');
+      for (const name of Object.keys(PRESETS)) {
+        const opt = document.createElement('option');
+        opt.value = name; opt.textContent = name;
+        sel.appendChild(opt);
+      }
+      sel.addEventListener('change', () => loadPreset(sel.value));
+
+      const seqSel = document.getElementById('mSeqPreset');
+      for (const name of Object.keys(SEQ_PRESETS)) {
+        const opt = document.createElement('option');
+        opt.value = name; opt.textContent = name;
+        seqSel.appendChild(opt);
+      }
+      seqSel.addEventListener('change', () => {
+        const p = SEQ_PRESETS[seqSel.value];
+        if (p) { seq.loadPattern(p.pattern); document.getElementById('mSeqBPM').value = p.bpm; seq.setBPM(p.bpm); updateSeqUI(); }
+      });
+    }
+
+    function loadPreset(name) {
+      const preset = PRESETS[name];
+      if (!preset) return;
+      for (const [key, val] of Object.entries(preset)) {
+        synth.setParam(key, val);
+        document.querySelectorAll(`[data-param="${key}"]`).forEach(el => {
+          el.value = val;
+        });
+        document.querySelectorAll(`[data-for="${key}"]`).forEach(d => {
+          d.textContent = formatVal(key, val);
+        });
+      }
+      drawEnvelope();
+    }
+
+    function formatVal(param, val) {
+      if (typeof val === 'number') {
+        if (param === 'filterCutoff') return Math.round(val) + ' Hz';
+        if (val >= 100) return Math.round(val).toString();
+        return val.toFixed(2);
+      }
+      return val;
+    }
+
+    // --- Controls ---
+    function bindControls() {
+      document.querySelectorAll('[data-param]').forEach(el => {
+        const param = el.dataset.param;
+        const handler = () => {
+          let val = el.value;
+          if (el.type === 'range' || el.type === 'number') val = parseFloat(val);
+          if (['octave', 'osc2Octave'].includes(param)) val = parseInt(val);
+          synth.setParam(param, val);
+          document.querySelectorAll(`[data-for="${param}"]`).forEach(d => {
+            d.textContent = formatVal(param, val);
+          });
+          if (['attack', 'decay', 'sustain', 'release'].includes(param)) drawEnvelope();
+        };
+        el.addEventListener('input', handler);
+        el.addEventListener('change', handler);
+      });
+
+      document.getElementById('mSeqPlayBtn').addEventListener('click', async () => {
+        await synth.init(); synth.resume(); seq.start();
+        document.getElementById('mSeqPlayBtn').classList.add('active');
+      });
+      document.getElementById('mSeqStopBtn').addEventListener('click', () => {
+        seq.stop();
+        document.getElementById('mSeqPlayBtn').classList.remove('active');
+      });
+      document.getElementById('mSeqBPM').addEventListener('input', e => seq.setBPM(parseInt(e.target.value)));
+      document.getElementById('mSeqRandom').addEventListener('click', () => {
+        seq.randomize(document.getElementById('mSeqScale').value);
+        updateSeqUI();
+      });
+    }
+
+    // --- Keyboard ---
+    function buildKeyboard() {
+      const kb = document.getElementById('mKeyboard');
+      const startNote = 48;
+      const numOctaves = 2;
+      const whiteNotes = [0, 2, 4, 5, 7, 9, 11];
+      const blackNotes = [1, 3, -1, 6, 8, 10, -1];
+
+      for (let oct = 0; oct < numOctaves; oct++) {
+        const base = startNote + oct * 12;
+        for (let i = 0; i < 7; i++) {
+          const note = base + whiteNotes[i];
+          const key = document.createElement('div');
+          key.className = 'm-key white';
+          key.dataset.note = note;
+          kb.appendChild(key);
+          if (blackNotes[i] >= 0) {
+            const bk = document.createElement('div');
+            bk.className = 'm-key black';
+            bk.dataset.note = base + blackNotes[i];
+            kb.appendChild(bk);
+          }
+        }
+      }
+
+      kb.addEventListener('touchstart', e => { e.preventDefault(); handleTouch(e); }, { passive: false });
+      kb.addEventListener('touchmove', e => { e.preventDefault(); handleTouch(e); }, { passive: false });
+      kb.addEventListener('touchend', e => { e.preventDefault(); synth.allNotesOff(); kb.querySelectorAll('.active').forEach(k => k.classList.remove('active')); }, { passive: false });
+    }
+
+    function handleTouch(e) {
+      synth.init().then(() => synth.resume());
+      synth.allNotesOff();
+      document.querySelectorAll('.m-key.active').forEach(k => k.classList.remove('active'));
+      for (const t of e.touches) {
+        const el = document.elementFromPoint(t.clientX, t.clientY);
+        if (el && el.classList.contains('m-key')) {
+          synth.noteOn(parseInt(el.dataset.note));
+          el.classList.add('active');
+        }
+      }
+    }
+
+    // --- Sequencer UI ---
+    function buildSequencer() {
+      const grid1 = document.getElementById('mSeqGrid1');
+      const grid2 = document.getElementById('mSeqGrid2');
+      for (let i = 0; i < 16; i++) {
+        const step = document.createElement('div');
+        step.className = 'm-seq-step' + (seq.pattern[i].active ? ' active' : '');
+        step.dataset.step = i;
+        step.textContent = noteToName(seq.pattern[i].note);
+        step.addEventListener('click', () => {
+          const isActive = seq.toggleStep(i);
+          step.classList.toggle('active', isActive);
+        });
+        (i < 8 ? grid1 : grid2).appendChild(step);
+      }
+      seq.onStep = (idx) => {
+        document.querySelectorAll('.m-seq-step').forEach((s, i) => s.classList.toggle('current', i === idx));
+      };
+    }
+
+    function updateSeqUI() {
+      document.querySelectorAll('.m-seq-step').forEach((s, i) => {
+        s.classList.toggle('active', seq.pattern[i].active);
+        s.textContent = noteToName(seq.pattern[i].note);
+      });
+    }
+
+    // --- Envelope ---
+    function drawEnvelope() {
+      const canvas = document.getElementById('envCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      const a = synth.params.attack, d = synth.params.decay, s = synth.params.sustain, r = synth.params.release;
+      const total = a + d + 0.3 + r;
+      ctx.beginPath();
+      ctx.moveTo(0, h);
+      ctx.lineTo((a/total)*w, 4);
+      ctx.lineTo(((a+d)/total)*w, h - s*(h-4));
+      ctx.lineTo(((a+d+0.3)/total)*w, h - s*(h-4));
+      ctx.lineTo(w, h);
+      ctx.strokeStyle = '#b388ff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(179,136,255,0.1)';
+      ctx.fill();
+    }
+
+    // --- Viz ---
+    function startViz() {
+      const canvas = document.getElementById('vizCanvas');
+      const ctx = canvas.getContext('2d');
+      function resize() {
+        canvas.width = canvas.parentElement.clientWidth * window.devicePixelRatio;
+        canvas.height = canvas.parentElement.clientHeight * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      function draw() {
+        const w = canvas.width / window.devicePixelRatio;
+        const h = canvas.height / window.devicePixelRatio;
+        ctx.fillStyle = 'rgba(10,10,15,0.4)';
+        ctx.fillRect(0, 0, w, h);
+        const freqData = synth.getFrequencyData();
+        if (freqData.length > 0) {
+          const barCount = 32;
+          const barW = w / barCount;
+          const step = Math.floor(freqData.length / barCount);
+          for (let i = 0; i < barCount; i++) {
+            const val = freqData[i * step] / 255;
+            const barH = val * h * 0.8;
+            ctx.fillStyle = `hsla(${20 + i * 5}, 80%, 55%, ${0.4 + val * 0.4})`;
+            ctx.fillRect(i * barW, h - barH, barW - 1, barH);
+          }
+        }
+        requestAnimationFrame(draw);
+      }
+      draw();
+    }
+
+    // --- Start ---
+    document.addEventListener('touchstart', () => { synth.init(); synth.resume(); }, { once: true });
+    initApp();
+  </script>
+</body>
+</html>
